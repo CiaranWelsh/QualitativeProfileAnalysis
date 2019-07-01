@@ -1,0 +1,15 @@
+conditions: {}
+settings:
+  integration_options: {}
+  n_iterations: 10
+  sampling_mode: lhs
+species:
+  A:
+    lower_bound: 1
+    upper_bound: 100
+  B:
+    lower_bound: 1
+    upper_bound: 100
+  C:
+    lower_bound: 1
+    upper_bound: 100
