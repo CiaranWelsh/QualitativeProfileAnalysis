@@ -56,8 +56,11 @@ class QualitativeProfileAnalysis:
                 raise ValueError
             specie = specie[0]
             setattr(self.model, specie, ics_vals[i])
-
-        return self.model.simulate(self.start, self.end, self.intervals)
+        # print(dict(zip(ic_names, ics_vals)))
+        try:
+            return self.model.simulate(self.start, self.end, self.intervals)
+        except Exception:
+            return None
 
     def run(self):
         for i in range(self.n_iterations):
@@ -118,8 +121,43 @@ class Plotter:
         print(self.short_form_df.head())
         fig = plt.figure()
         sns.lineplot(x='time', y=variable, data=self.short_form_df.reset_index(), **kwargs,
-                    units='simulation_id', estimator=None )
+                     units='simulation_id', estimator=None,
+                     linewidth=1)
         sns.despine(fig=fig, top=True, right=True)
+
+        if fname is None:
+            plt.show()
+        else:
+            plt.savefig(fname, dpi=300, bbox_per_inches='tight')
+
+    def plot_as_matrix(self, vars, ncols=3, fname=None, wspace=0.5,
+                       hspace=0.5, figsize=(12, 12), **kwargs):
+        sns.set_context(context='talk')
+        vars = [i for i in vars if i not in ['simulation_id', 'time']]
+        df = self.short_form_df[vars]
+        n_to_plot = len(vars)
+        nrows = int(np.floor(n_to_plot / ncols))
+        remainder = n_to_plot % ncols  # number in last column
+        if remainder != 0:
+            nrows = nrows + 1
+        vars_iter = iter(vars)
+        fig, ax = plt.subplots(ncols=ncols, nrows=nrows, sharex=True, figsize=figsize)
+        print('len vars', len(vars))
+        for i in range(nrows):
+            for j in range(ncols):
+                try:
+                    current_var = vars[nrows*i+j]
+                    sns.lineplot(
+                        ax=ax[i, j], x='time', y=current_var,
+                        data=df.reset_index(),
+                        units='simulation_id', estimator=None,
+                        linewidth=1,
+                        **kwargs)
+                except IndexError:
+                    break
+
+        sns.despine(fig=fig, top=True, right=True)
+        plt.subplots_adjust(wspace=wspace, hspace=hspace)
 
         if fname is None:
             plt.show()

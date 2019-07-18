@@ -5,6 +5,7 @@ from collections import ChainMap
 import re
 import scipy.stats as stats
 
+
 class Config(ChainMap):
 
     def __init__(self, sbml, settings_kwargs={}, species_kwargs={}, conditions_kwargs={}):
@@ -13,6 +14,10 @@ class Config(ChainMap):
         self.settings_kwargs = settings_kwargs
         self.species_kwargs = species_kwargs
         self.conditions_kwargs = conditions_kwargs
+
+        self.settings = self._settings(**self.settings_kwargs)
+        self.species = self._species(**self.species_kwargs)
+        self.conditions = self._conditions(**self.conditions_kwargs)
 
         self.config = self._create_config()
         super().__init__(self.config)
@@ -26,7 +31,9 @@ class Config(ChainMap):
                 end_time=100,
                 intervals=101
             ),
-            quantity_type='concentration',           # or particle numbers
+            loc=0.01,
+            scale=99.9,
+            quantity_type='concentration',  # or particle numbers
         )
 
     def _settings(self, **kwargs):
@@ -51,7 +58,7 @@ class Config(ChainMap):
             assert len(species) == 1
             species = species[0]
             dct[species] = dict(distribution=stats.uniform,
-                                loc=0.1, scale=99.9)
+                                loc=self.settings['loc'], scale=self.settings['scale'])
         return dct
 
     def _species(self, **kwargs):
@@ -61,16 +68,13 @@ class Config(ChainMap):
         return species
 
     def _create_config(self):
-        settings = self._settings(**self.settings_kwargs)
-        conditions = self._conditions(**self.conditions_kwargs)
-        species = self._species(**self.species_kwargs)
         return dict(
-            settings=settings,
-            conditions=conditions,
-            species=species
+            settings=self.settings,
+            conditions=self.conditions,
+            species=self.species
         )
 
-    def to_yaml(self, filename):
+    def to_yaml(self, filename=None):
         with open(filename, 'w') as f:
             yaml_string = yaml.dump(self.config, f, default_flow_style=False)
         return yaml_string

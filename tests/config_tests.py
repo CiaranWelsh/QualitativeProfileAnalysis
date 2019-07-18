@@ -34,6 +34,15 @@ class ConfigTests(unittest.TestCase):
         config.to_yaml(filename=self.yaml_file)
         self.assertTrue(os.path.isfile(self.yaml_file))
 
+    def test_loc_and_scale_change(self):
+        config = Config(
+            self.sbml,
+            settings_kwargs=dict(
+                loc=10, scale=20
+            )
+        )
+        self.assertEqual(config['species']['A']['loc'], 10)
+
 
 
 
